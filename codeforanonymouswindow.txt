@@ -11,74 +11,53 @@ List<string> finalpackge = new list<string>();
         finalpackge.add(packg);
         system.debug('packg'+ packg);
     }
-
 list<String> types = new list<string>();
 list<String> types2 = new list<string>();
 types = finalpackge[0].split(';');
 types2 = finalpackge[1].split(';');
-system.debug('types'+ types);
-system.debug('types2'+ types2);
+map<string, list<string>> mapoflistofstrings = new map<string, list<string>>();
+mapoflistofstrings.put('type1',types);
+mapoflistofstrings.put('type2',types2);
 map<string, list<string>> listOfFilesByType = new map<string, list<string>>();
-map<string, list<string>> listOfFilesByType2 = new map<string, list<string>>();
-
-for(string st1 : types){
-    system.debug('st1'+ st1);
+List<map<string, list<string>>> listofMaps = new List<map<string, list<string>>>();
+for(string typekey : mapoflistofstrings.keyset()){
+    listOfFilesByType = new map<string, list<string>>();
+	for(string st1 : mapoflistofstrings.get(typekey)){
     string metaType = st1.substringBetween('<name>','</name>');
-    system.debug('metaType'+ metaType);
     st1 = st1.replaceAll('</members>', '</members>;');
-    system.debug('st1'+ st1);
     List<string> removables = new list<string>{'<name>','</name>',metaType,'<members>', '</members>',  '<types>', '</types>'};
         for(string rem : removables){
             st1 = st1.remove(rem);
         }
-    system.debug('st1'+ st1);
     list<string> files = st1.split(';');
-    system.debug('files'+ files);
     listOfFilesByType.put(metaType,files);
+    
 }
-for(string st1 : types2){
-    system.debug('st1'+ st1);
-    string metaType = st1.substringBetween('<name>','</name>');
-    system.debug('metaType'+ metaType);
-    st1 = st1.replaceAll('</members>', '</members>;');
-    system.debug('st1'+ st1);
-    List<string> removables = new list<string>{'<name>','</name>',metaType,'<members>', '</members>',  '<types>', '</types>'};
-        for(string rem : removables){
-            st1 = st1.remove(rem);
-        }
-    system.debug('st1'+ st1);
-    list<string> files = st1.split(';');
-    system.debug('files'+ files);
-    listOfFilesByType2.put(metaType,files);
+    listofMaps.add(listOfFilesByType);
 }
+//system.debug('listofMaps'+ listofMaps);
 map<string, list<string>>totalmap = new map<string, list<string>>();
-totalmap.putall(listOfFilesByType);
+totalmap.putall(listofMaps[0]);
 set<string> finalset = new set<string>();
 list<string> finallist = new list<string>();
-for(string key : listOfFilesByType2.keyset()){
+for(string key : listofMaps[1].keyset()){
     if(!totalmap.containskey(key)){
-        totalmap.put(key, listOfFilesByType2.get(key));
+        totalmap.put(key, listofMaps[1].get(key));
     }
     else{
         finalset.addAll(totalmap.get(key));
-        finalset.addAll(listOfFilesByType2.get(key));
+        finalset.addAll(listofMaps[1].get(key));
         finallist.addAll(finalset);
         totalmap.put(key, finallist);
     }
 }
-system.debug('totalmap'+ totalmap);
 string finalstring = '<?xml version="1.0" encoding="UTF-8"?><Package xmlns="http://soap.sforce.com/2006/04/metadata">';
 for(string key : totalmap.keyset()){
-    system.debug('key'+ key);
     finalstring = finalstring + '<types>';
     for(string val : totalmap.get(key)){
-        system.debug('val'+ val);
         finalstring = finalstring + '<members>'+val+ '</members>';
     }
-    system.debug('finalstring1'+ finalstring);
     finalstring = finalstring + '<name>'+key+'</name></types>';
-    
-    system.debug('finalstring2'+ finalstring);
 }
 finalstring = finalstring+'<version>40.0</version></Package>';
 system.debug('finalstring'+ finalstring);
