@@ -1,0 +1,84 @@
+string s1 = ' <types> <members> Case</members><members> Account</members> <name>CustomObject </name></types> <types> <members> HSvc_CaseCreateEdit</members> <name>ApexPage </name></types>  ';
+String s2 =  ' <types> <members>Account</members><name>CustomObject</name></types><types> <members>Account</members><name>SharingRule</name></types>';
+boolean abc = s2.contains('</name>');
+string s3 = s1.trim();
+string s4 = s2.trim();
+s3 = s3.replaceAll('(\\s+)', '');
+s4 = s4.replaceAll('(\\s+)', '');
+s3 = s3.replaceAll('</types>', '</types>;');
+s4 = s4.replaceAll('</types>', '</types>;');
+list<String> types = new list<string>();
+list<String> types2 = new list<string>();
+types = s3.split(';');
+types2 = s4.split(';');
+system.debug('types'+ types);
+system.debug('types2'+ types2);
+map<string, list<string>> listOfFilesByType = new map<string, list<string>>();
+map<string, list<string>> listOfFilesByType2 = new map<string, list<string>>();
+for(string st1 : types){
+    system.debug('st1'+ st1);
+    string metaType = st1.substringBetween('<name>','</name>');
+    system.debug('metaType'+ metaType);
+    st1 = st1.replaceAll('</members>', '</members>;');
+    system.debug('st1'+ st1);
+    List<string> removables = new list<string>{'<name>','</name>',metaType,'<members>', '</members>',  '<types>', '</types>'};
+        for(string rem : removables){
+            st1 = st1.remove(rem);
+        }
+    system.debug('st1'+ st1);
+    list<string> files = st1.split(';');
+    system.debug('files'+ files);
+    listOfFilesByType.put(metaType,files);
+}
+for(string st1 : types2){
+    system.debug('st1'+ st1);
+    string metaType = st1.substringBetween('<name>','</name>');
+    system.debug('metaType'+ metaType);
+    st1 = st1.replaceAll('</members>', '</members>;');
+    system.debug('st1'+ st1);
+    List<string> removables = new list<string>{'<name>','</name>',metaType,'<members>', '</members>',  '<types>', '</types>'};
+        for(string rem : removables){
+            st1 = st1.remove(rem);
+        }
+    system.debug('st1'+ st1);
+    list<string> files = st1.split(';');
+    system.debug('files'+ files);
+    listOfFilesByType2.put(metaType,files);
+}
+map<string, list<string>>totalmap = new map<string, list<string>>();
+totalmap.putall(listOfFilesByType);
+set<string> finalset = new set<string>();
+list<string> finallist = new list<string>();
+for(string key : listOfFilesByType2.keyset()){
+    if(!totalmap.containskey(key)){
+        totalmap.put(key, listOfFilesByType2.get(key));
+    }
+    else{
+        finalset.addAll(totalmap.get(key));
+        finalset.addAll(listOfFilesByType2.get(key));
+        finallist.addAll(finalset);
+        totalmap.put(key, finallist);
+    }
+}
+system.debug('totalmap'+ totalmap);
+string finalstring = '<?xml version="1.0" encoding="UTF-8"?><Package xmlns="http://soap.sforce.com/2006/04/metadata">';
+for(string key : totalmap.keyset()){
+    system.debug('key'+ key);
+    finalstring = finalstring + '<types>';
+    for(string val : totalmap.get(key)){
+        system.debug('val'+ val);
+        finalstring = finalstring + '<members>'+val+ '</members>';
+    }
+    system.debug('finalstring1'+ finalstring);
+    finalstring = finalstring + '<name>'+key+'</name></types>';
+    system.debug('finalstring2'+ finalstring);
+}
+finalstring = finalstring+'</Package>';
+system.debug('finalstring'+ finalstring);
+
+
+
+//tring s4 = s3.substringBetween('<name>', '</name>');
+//system.debug('s4'+ s4);
+
+
